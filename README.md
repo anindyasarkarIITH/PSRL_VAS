@@ -1,7 +1,7 @@
 # A Partially Supervised Reinforcement Learning Framework for Visual Active Search
 This repository contains implementation of our work titled as __A Partially Supervised Reinforcement Learning Framework for Visual Active Search__. We propose a partially Supervised reinforcement learning framework for Visual Active Search. 
 
-<img src="./figures/architecture_psrl.png" alt="WAMI_Positives" style="width: 200p;"/>
+<img src="./figures/framework.png" alt="WAMI_Positives" style="width: 200p;"/>
 
 **PDF**: Coming Soon
 
