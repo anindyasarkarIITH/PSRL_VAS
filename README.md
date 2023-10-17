@@ -3,7 +3,7 @@ This repository contains implementation of our work titled as __A Partially Supe
 
 <img src="./figures/framework.png" alt="WAMI_Positives" style="width: 200p;"/>
 
-**PDF**: Coming Soon
+**PDF**: https://arxiv.org/abs/2310.09689
 
 **Authors**: Anindya Sarkar, Nathan Jacobs, Yevgeniy Vorobeychik.
 
