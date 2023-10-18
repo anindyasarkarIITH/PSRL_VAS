@@ -32,5 +32,5 @@ This repository contains implementation of our work titled as __A Partially Supe
 To train the policy network on different benchmarks including **xView**, **DOTA** dataset:
 
 ```shell
-  python3 train-mpsvas.py
+  python3 train-MPSVAS.py
 ```
