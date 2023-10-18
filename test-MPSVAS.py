@@ -216,7 +216,7 @@ pred_Agent = utils.Model_search_Arch_Adapt_pred()
 search_Agent = utils.Model_search_Arch_Adapt_search_meta()
 
 # ---- Load the pre-trained model ----------------------
-search_checkpoint = torch.load("/storage1//model_vas_dota36_lv_adapt_F_meta_search")
+search_checkpoint = torch.load("/storage1/model_vas_dota36_lv_adapt_F_meta_search")
 search_Agent.load_state_dict(search_checkpoint['agent'])                                                      
 start_epoch = search_checkpoint['epoch'] + 1
 print('loaded agent from %s' % args.load)
