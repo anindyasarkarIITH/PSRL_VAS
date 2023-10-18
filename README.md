@@ -24,6 +24,7 @@ This repository contains implementation of our work titled as __A Partially Supe
 ```shell
   python3 Prepare_data.py
 ```
+The label files corresponds to each different settings we consider in this work can be downloaded from the following Google Drive folder link: https://drive.google.com/drive/folders/1ATpYBdnO7G3GcZb20CODZ0ReNRQlXh78?usp=share_link
 
 ## Training
 **Train the MPS-VAS Policy Network**
