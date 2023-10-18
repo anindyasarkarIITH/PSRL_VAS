@@ -45,8 +45,8 @@ args = parser.parse_args("")
 if not os.path.exists(args.cv_dir):
     os.makedirs(args.cv_dir)
 def coord(x):
-    x_= x//7 + 1  #7
-    y_= x%7      #7
+    x_= x//6 + 1  #7
+    y_= x%6      #7
     return (x_,y_)    
 ## vas training function
 def train(epoch):
