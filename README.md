@@ -57,3 +57,5 @@ In order to test MPS-VAS in different settings, follow the exact same modificati
 Note that, the provided code is used to test MPS-VAS in **uniform query cost** setting, where, we assign the cost budget in line 56. In order to test VAS in **distance based query cost** setting, assign the cost budget in line 85 and uncomment the lines from 120 to 130. 
 
 We provide the trained MPS-VAS policy model parameters for each settings in the following Google Drive folder link:
+
+For example, the trained MPS-VAS policy model parameters when trained with large vehicle as target and number of grids as 36 is saved in files named as model_vas_dota36_lv_adapt_F_meta_pred (to store the weights for prediction module) and model_vas_dota36_lv_adapt_F_meta_search (to store the weights for search module).
