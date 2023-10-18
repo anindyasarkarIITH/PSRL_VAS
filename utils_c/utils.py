@@ -352,11 +352,11 @@ def get_datasetVIS(img_size, root='/home/research/Visual_Active_Search_Project/'
 def get_datasetVIS_Classwise(img_size, root='/home/research/'):
     transform_train, transform_test = get_transforms(img_size)
 
-    # use first 70% data for training train_helicoptar_xview49_500.csv  train_helipad_xview49_500.csv
-    trainset = CustomDatasetFromImages(root+'train_sb_xview_99_.csv', transform_train) 
+    # use first 70% data for training train_helicoptar_xview49_500.csv  train_helipad_xview49_500.csv train_sb_xview_99_.csv
+    trainset = CustomDatasetFromImages(root+'train_dota.csv', transform_train) 
     
-    # use remaining 30% data for testing  train_helipad_xview49_500.csv
-    testset = CustomDatasetFromImagesTest_Classwise(root+'train_sb_xview_99_.csv', transform_test) 
+    # use remaining 30% data for testing  train_helipad_xview49_500.csv  train_sb_xview_99_.csv
+    testset = CustomDatasetFromImagesTest_Classwise(root+'train_dota.csv', transform_test) 
     
     return trainset, testset
 
