@@ -69,6 +69,16 @@ To test the policy network on different benchmarks including **xView**, **DOTA**
 In order to test MPS-VAS in different settings, follow the exact same modification instructions as mentioned above for the training part.
 Note that, the provided code is used to test MPS-VAS in **uniform query cost** setting, where, we assign the cost budget in line 56. In order to test VAS in **distance based query cost** setting, assign the cost budget in line 85 and uncomment the lines from 120 to 130. 
 
+**Test the PSVAS Policy Network**
+
+To test the policy network on different benchmarks including **xView**, **DOTA** dataset:
+
+```shell
+  python3 test-PSVAS.py
+```
+
+In order to test PSVAS in different settings, follow the exact same modification instructions as mentioned above for the MPS-VAS Policy evaluation section.
+
 We provide the trained policy model parameters (including MPS-VAS framework, PSVAS framework, and Multi-query framework) for each settings in the following Google Drive folder link:
 https://drive.google.com/drive/folders/1KuIMLblsQuBe75OjVJvLlTynk2mtgump?usp=share_link
 
