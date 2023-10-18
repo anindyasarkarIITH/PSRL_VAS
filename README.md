@@ -65,3 +65,17 @@ https://drive.google.com/drive/folders/1KuIMLblsQuBe75OjVJvLlTynk2mtgump?usp=sha
 For example, the trained MPS-VAS policy model parameters when trained with large vehicle as target and number of grids as 36 is saved in files named as model_vas_dota36_lv_adapt_F_meta_pred (to store the weights for prediction module) and model_vas_dota36_lv_adapt_F_meta_search (to store the weights for search module). 
 
 Similarly, the trained PSVAS policy model parameters when trained with large vehicle as target and number of grids as 36 is saved in file named as model_vas_dots36_lv_adapt_F.
+
+For questions or comments, please send an e-mail to **anindyasarkar.ece@gmail.com** or use the issue tab in github.
+
+You can cite our paper as:
+```
+@misc{sarkar2023partially,
+      title={A Partially Supervised Reinforcement Learning Framework for Visual Active Search}, 
+      author={Anindya Sarkar and Nathan Jacobs and Yevgeniy Vorobeychik},
+      year={2023},
+      eprint={2310.09689},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
+}
+```
