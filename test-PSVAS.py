@@ -28,8 +28,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 parser = argparse.ArgumentParser(description='PolicyNetworkTraining')
 parser.add_argument('--lr', type=float, default=1e-4, help='learning rate') 
-#parser.add_argument('--data_dir', default='/home/research/anindya/Explainable_VAS/', help='data directory')
-parser.add_argument('--data_dir', default='/home/research/anindya/Visual_Active_Search_Project/EfficientObjectDetection/', help='data directory')
+#parser.add_argument('--data_dir', default='/home/research/data_path/', help='data directory')
+parser.add_argument('--data_dir', default='/home/research/data_path/', help='data directory')
 parser.add_argument('--load', default=None, help='checkpoint to load agent from')
 parser.add_argument('--cv_dir', default='cv/tmp/', help='checkpoint directory (models and logs are saved here)')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size')
@@ -235,7 +235,7 @@ testloader = torchdata.DataLoader(testset, batch_size=args.batch_size, shuffle=F
 #agent = utils.Model_search_Arch_diffbudVIS1TEST()  #_
 agent = utils.Model_search_Arch_Adapt()
 
-# ---- Load the pre-trained model ----------------------/home/research/anindya/Explainable_VAS/
+# ---- Load the pre-trained model ----------------------/home/research/
 #uncomment this if we want to start training from a pretrained model project1/model_vas_xview_small_car_49
 checkpoint = torch.load("/storage1/model_vas_xview99_sc_adapt_F")
 agent.load_state_dict(checkpoint['agent'])                                                      
