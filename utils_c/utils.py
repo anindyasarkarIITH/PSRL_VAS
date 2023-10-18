@@ -335,7 +335,7 @@ def get_datasetFM(img_size, root='/home/research/Visual_Active_Search_Project/')
 
     return trainset, testset
 
-#'/home/research/anindya/Visual_Active_Search_Project/EfficientObjectDetection/'
+#'/home/research/'
 def get_datasetVIS(img_size, root='/home/research/Visual_Active_Search_Project/'):
     transform_train, transform_test = get_transforms(img_size)
 
@@ -348,7 +348,7 @@ def get_datasetVIS(img_size, root='/home/research/Visual_Active_Search_Project/'
     #testset = CustomDatasetFromImagesTest(root+'train_dota.csv', transform_test) 
     
     return trainset, testset
-#/home/research/anindya/Explainable_VAS/
+#/home/research/
 def get_datasetVIS_Classwise(img_size, root='/home/research/'):
     transform_train, transform_test = get_transforms(img_size)
 
