@@ -116,7 +116,7 @@ def test(epoch, best_sr):
             
             # Sample the grid that corresponds to highest probability of being target
             policy_sample = torch.argmax(mask_probs, dim=1) 
-            
+            """
             ###### cost travel
             p1, p2 = coord(int(policy_sample))
             if (step_ == 0):
@@ -128,7 +128,7 @@ def test(epoch, best_sr):
             if remain_cost < 0:
                 break
             ################# travel
-            
+            """
             # compute the reward for the agent's action
             reward_update = utils.compute_reward(targets, policy_sample.data, args.beta, args.sigma)
 
