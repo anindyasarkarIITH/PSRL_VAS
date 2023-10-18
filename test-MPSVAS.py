@@ -53,7 +53,7 @@ def coord(x):
     
 # test the agent's performance on VAS setting    
 def test(epoch, best_sr): 
-    search_budget = random.randrange(12,19,3)  #35, 50, 75
+    search_budget = random.randrange(12,19,3)  #25, 50, 75
     num_image = 0
     # set the agent in evaluation mode
     search_Agent.eval()
