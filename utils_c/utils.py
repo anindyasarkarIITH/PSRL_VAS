@@ -340,11 +340,11 @@ def get_datasetVIS(img_size, root='/home/research/Visual_Active_Search_Project/'
     transform_train, transform_test = get_transforms(img_size)
 
     # use first 70% data for training
-    trainset = CustomDatasetFromImages(root+'train_sc_xview_99_.csv', transform_train) 
+    trainset = CustomDatasetFromImages(root+'train_dota.csv', transform_train) #train_sc_xview_99_.csv for small car 99 grid size
     #trainset = CustomDatasetFromImages(root+'train_dota.csv', transform_train) 
     
     # use remaining 30% data for testing
-    testset = CustomDatasetFromImagesTest(root+'train_sc_xview_99_.csv', transform_test) 
+    testset = CustomDatasetFromImagesTest(root+'train_dota.csv', transform_test) #train_sc_xview_99_.csv for small car 99 grid size
     #testset = CustomDatasetFromImagesTest(root+'train_dota.csv', transform_test) 
     
     return trainset, testset
