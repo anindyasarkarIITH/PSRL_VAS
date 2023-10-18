@@ -42,3 +42,18 @@ In order to train MPS-VAS in different settings as reported in the paper, modify
 2. Specify the **right train/test csv file path** as input for that particular setting in "get_datasetVIS and "get_datasetVIS_Classwise" function as defined in utils.py. Provide the path of train csv file in line 343 of utils.py and test csv file in line 347 and 359 of utils.py.
 3. Provide the **appropriate label file** for that particular settings in dataloader.py script in the dataset folder. Specifically in line 189 and in line 230.
 4. Provide the **appropriate value for num_actions** in line 6 of constant.py. For example, in case of 6 * 6 grid structure, num_actions = 36. Also modify the coord function defined in vas_train.py/vas_test.py based on grid structure.
+
+
+## Evaluate
+**Test the MPS-VAS Policy Network**
+
+To test the policy network on different benchmarks including **xView**, **DOTA** dataset:
+
+```shell
+  python3 test-MPSVAS.py
+```
+
+In order to test MPS-VAS in different settings, follow the exact same modification instructions as mentioned above for the training part.
+Note that, the provided code is used to test MPS-VAS in **uniform query cost** setting, where, we assign the cost budget in line 56. In order to test VAS in **distance based query cost** setting, assign the cost budget in line 85 and uncomment the lines from 120 to 130. 
+
+We provide the trained MPS-VAS policy model parameters for each settings in the following Google Drive folder link:
