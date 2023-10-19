@@ -57,6 +57,17 @@ Note that, train-PSVAS.py script is used to train the PSVAS policy with large Ve
 In order to train PSVAS in different settings as reported in the paper, follow the exact same modification instructions as mentioned above for the training MPS-VAS policy. For example:
 1. Use the **appropriate model class** for each settings as defined in utils.py ( for example, in order to train PSVAS with large vehicle target class from DOTA and with 8 * 8 grid structure, use the model class (Model_search_Arch_Adapt) defined in line 791 to line 877 in utils.py. PSVAS policy architecture for each setting is also defined in utils.py. We mention the setting name just above the model class definition in each settings. PSVAS policy architecture for all different settings we consider is defined between line 705 to line 1088 in utils.py script inside utils_c folder.
 
+**Train the MQ-VAS Policy Network**
+
+To train the policy network on different benchmarks including **xView**, **DOTA** dataset:
+
+```shell
+  python3 train-MQ.py
+```
+Note that, train-MQ.py script is used to train the MQ-VAS policy with large Vehicle as target class from DOTA and 6 * 6 grid structure.
+In order to train MQ-VAS in different settings as reported in the paper, follow the exact same modification instructions as mentioned above for the training MQ-VAS policy. For example:
+1. Use the **appropriate model class** for each settings as defined in utils.py ( for example, in order to train MQVAS with large vehicle target class from DOTA and with 8 * 8 grid structure, use the model class (Model_search_Arch_Adapt_batch) defined in line 1295 to line 1401 in utils.py. MQ-VAS policy architecture for each setting is also defined in utils.py. We mention the setting name just above the model class definition in each settings. MQ-VAS policy architecture for all different settings we consider is defined between line 1091 to line 1620 in utils.py script inside utils_c folder.   
+
 ## Evaluate
 **Test the MPS-VAS Policy Network**
 
