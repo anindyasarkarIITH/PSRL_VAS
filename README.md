@@ -90,6 +90,16 @@ To test the policy network on different benchmarks including **xView**, **DOTA**
 
 In order to test PSVAS in different settings, follow the exact same modification instructions as mentioned above for the MPS-VAS Policy evaluation section.
 
+**Test the MQVAS Policy Network**
+
+To test the policy network on different benchmarks including **xView**, **DOTA** dataset:
+
+```shell
+  python3 test-MQ.py
+```
+
+In order to test MQ-VAS in different settings, follow the exact same modification instructions as mentioned above for the MPS-VAS Policy evaluation section above.
+
 We provide the trained policy model parameters (including MPS-VAS framework, PSVAS framework, and Multi-query framework) for each settings in the following Google Drive folder link:
 https://drive.google.com/drive/folders/1KuIMLblsQuBe75OjVJvLlTynk2mtgump?usp=share_link
 
