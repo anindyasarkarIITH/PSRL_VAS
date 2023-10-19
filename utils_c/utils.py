@@ -1087,5 +1087,535 @@ class Model_search_Arch_Adapt_search(torch.nn.Module):
         logits_rl = self.linear_relu_stack_rl(rl_rep_final)
         return logits_rl 
 """
+"""
+# MQ-VAS (small car xview 99 grid size)
+class Model_search_Arch_Adapt(torch.nn.Module):
+    def __init__(self):
+        super(Model_search_Arch_Adapt, self).__init__()
+        resnet_embedding_sz = 512
+        pointwise_in_channels = 60 
+        ## Input feature extractor
+        res34_model = torchmodels.resnet34(pretrained=True)
+        self.agent = torch.nn.Sequential(*list(res34_model.children())[:-2])
+        for param in self.agent.parameters():
+            param.requires_grad = False
+        # feature squezzing using 1x1 conv
+        self.conv1 = torch.nn.Conv2d(resnet_embedding_sz, 99, 1) #30
+        self.maxpool = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        #################
+        '''
+        # final MLP layer to transform combine representation to action space
+        self.linear_relu_stack_ = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 49),    #60
+        )
+        '''
+        ##################
+        
+        self.pointwise = torch.nn.Conv2d(198, 3, 1, 1) #61
+        
+        self.pointwise_search_info = torch.nn.Conv2d(99, 1, 1, 1)
+        #self.pointwise_pred = torch.nn.Conv2d(98, 3, 1, 1) #60
+        
+        # final MLP layer to transform combine representation to action space for grid prob
+        self.linear_relu_stack = torch.nn.Sequential(
+            torch.nn.Linear(147, 128),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, 99),    #60
+        )
+        
+        # final MLP layer to transform combine representation to action space for searching
+        self.linear_relu_stack_rl = torch.nn.Sequential(
+            torch.nn.Linear(198, 164),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(164, 99),    #60
+        )
 
+    def forward(self, x, search_info, query_left):
+        # Input feature extraction
+        feat_ext = self.agent(x)
+        # feature squezing using 1x1 conv
+        
+        
+        reduced_feat_resnet =  F.relu(self.conv1(feat_ext))
+        #print (reduced_feat_resnet.shape)
+        reduced_feat = self.maxpool(reduced_feat_resnet)  #apply maxpool stride = 2
+        #print (reduced_feat.shape)  # 64, 7 , 7
+        
+        
+        # tile previous search history information (auxiliary state ot) 
+        search_info_tile = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 7, 7)
+        #print (search_info_tile.shape) #64, 7, 7
+        
+        search_info_tile_search_module = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 11, 9)
+        
+        # tile remaining query budget information (b)
+        query_info_tile = query_left.view(query_left.shape[0], 1, 1, 1).repeat(1, 1, 11, 9)
+        #print (query_info_tile.shape) # 1, 7, 7
+        
+        # channel-wise concatenation of input feature, auxiliary state and remainin search budget as explained in the paper
+        inp_search_concat = torch.cat((reduced_feat, search_info_tile), dim=1)  #, query_info_tile
+        
+        ## apply 1x1 conv on the combined feature representation
+        combined_feat = F.relu(self.pointwise(inp_search_concat))
+        
+        ## apply 1*1 conv on the search info feature representation
+        #search_feat_map = F.relu(self.pointwise_search_info(search_info_tile))
+        search_feat_map = F.relu(self.pointwise_search_info(search_info_tile_search_module))
+        
+        # flattened the final representation
+        out = combined_feat.view(combined_feat.size(0), -1)
+        
+        #print (out.shape)
+        ## apply 2 layer MLP with relu activation to transform the combined feature representation into action space
+        logits = self.linear_relu_stack(out)
+        #print (logits.shape, )
+        grid_prob = logits #F.sigmoid(logits)
+        #grid_prob = torch.mul(logits, mask_info.clone()) 
+        
+        map_grid_prob = grid_prob.view(grid_prob.shape[0], 1, 11, 9)
+        #target = target.to(torch.float32)
+        #map_grid_prob = target.view(target.shape[0], 1, 7, 7)
+        rl_rep = torch.cat((map_grid_prob, search_feat_map), dim=1)  #, query_info_tile
+        rl_rep_final = rl_rep.view(rl_rep.size(0), -1)
+        #print (grid_prob.shape)
+        
+        
+        logits_rl = self.linear_relu_stack_rl(rl_rep_final)
+        return logits_rl, grid_prob   
+  
+# MQ-VAS for xviw small car 49 
+class Model_search_Arch_Adapt_batch(torch.nn.Module):
+    def __init__(self):
+        super(Model_search_Arch_Adapt_batch, self).__init__()
+        resnet_embedding_sz = 512
+        pointwise_in_channels = 60 
+        ## Input feature extractor
+        res34_model = torchmodels.resnet34(pretrained=True)
+        self.agent = torch.nn.Sequential(*list(res34_model.children())[:-2])
+        for param in self.agent.parameters():
+            param.requires_grad = False
+        # feature squezzing using 1x1 conv
+        self.conv1 = torch.nn.Conv2d(resnet_embedding_sz, 49, 1) #30
+        self.maxpool = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        #################
+        '''
+        # final MLP layer to transform combine representation to action space
+        self.linear_relu_stack_ = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 49),    #60
+        )
+        '''
+        ##################
+        
+        self.pointwise = torch.nn.Conv2d(98, 3, 1, 1) #61
+        
+        self.pointwise_search_info = torch.nn.Conv2d(49, 1, 1, 1)
+        
+        self.pointwise_loc_query_info = torch.nn.Conv2d(49, 1, 1, 1)
+        
+        #self.pointwise_pred = torch.nn.Conv2d(98, 3, 1, 1) #60
+        
+        # final MLP layer to transform combine representation to action space for grid prob
+        self.linear_relu_stack = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 49),    #60
+        )
+        
+        # final MLP layer to transform combine representation to action space for searching
+        self.linear_relu_stack_rl = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 49),    #60
+        )
+
+    def forward(self, x, search_info, query_left, loc_query_batch):
+        # Input feature extraction
+        feat_ext = self.agent(x)
+        # feature squezing using 1x1 conv
+        
+        
+        reduced_feat_resnet =  F.relu(self.conv1(feat_ext))
+        
+        reduced_feat = self.maxpool(reduced_feat_resnet)  #apply maxpool stride = 2
+        
+        
+        
+        # tile previous search history information (auxiliary state ot) 
+        search_info_tile = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 7, 7)
+        
+        # tile other queried location in the batch
+        loc_batch_tile = loc_query_batch.view(loc_query_batch.shape[0], loc_query_batch.shape[1], 1, 1).repeat(1, 1, 7, 7)
+        
+        
+        # tile remaining query budget information (b)
+        query_info_tile = query_left.view(query_left.shape[0], 1, 1, 1).repeat(1, 1, 7, 7)
+        #print (query_info_tile.shape)
+        
+        # channel-wise concatenation of input feature, auxiliary state and remainin search budget as explained in the paper
+        inp_search_concat = torch.cat((reduced_feat, search_info_tile), dim=1)  #, query_info_tile
+        
+        ## apply 1x1 conv on the combined feature representation
+        combined_feat = F.relu(self.pointwise(inp_search_concat))
+        
+        ## apply 1*1 conv on the search info feature representation
+        search_feat_map = F.relu(self.pointwise_search_info(search_info_tile))
+        
+        ## apply 1*1 conv on the search info feature representation
+        loc_query_batch_map = F.relu(self.pointwise_loc_query_info(loc_batch_tile))
+        
+        
+        # flattened the final representation
+        out = combined_feat.view(combined_feat.size(0), -1)
+        
+        #print (out.shape)
+        ## apply 2 layer MLP with relu activation to transform the combined feature representation into action space
+        logits = self.linear_relu_stack(out)
+        #print (logits.shape, )
+        grid_prob = logits #F.sigmoid(logits)
+        #grid_prob = torch.mul(logits, mask_info.clone()) 
+        
+        map_grid_prob = grid_prob.view(grid_prob.shape[0], 1, 7, 7)
+        #target = target.to(torch.float32)
+        #map_grid_prob = target.view(target.shape[0], 1, 7, 7)
+        rl_rep = torch.cat((map_grid_prob, search_feat_map, loc_query_batch_map), dim=1)  #, query_info_tile
+        rl_rep_final = rl_rep.view(rl_rep.size(0), -1)
+        #print (grid_prob.shape)
+        
+        
+        logits_rl = self.linear_relu_stack_rl(rl_rep_final)
+        return logits_rl, grid_prob    
+   
+ 
+# MQ-VAS for dota large vehicle 64 
+class Model_search_Arch_Adapt_batch(torch.nn.Module):
+    def __init__(self):
+        super(Model_search_Arch_Adapt_batch, self).__init__()
+        resnet_embedding_sz = 512
+        pointwise_in_channels = 60 
+        ## Input feature extractor
+        res34_model = torchmodels.resnet34(pretrained=True)
+        self.agent = torch.nn.Sequential(*list(res34_model.children())[:-2])
+        for param in self.agent.parameters():
+            param.requires_grad = False
+        # feature squezzing using 1x1 conv
+        self.conv1 = torch.nn.Conv2d(resnet_embedding_sz, 64, 1) #30
+        self.maxpool = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        #################
+        '''
+        # final MLP layer to transform combine representation to action space
+        self.linear_relu_stack_ = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 49),    #60
+        )
+        '''
+        ##################
+        
+        self.pointwise = torch.nn.Conv2d(128, 3, 1, 1) #61
+        
+        self.pointwise_search_info = torch.nn.Conv2d(64, 1, 1, 1)
+        
+        self.pointwise_loc_query_info = torch.nn.Conv2d(64, 1, 1, 1)
+        
+        #self.pointwise_pred = torch.nn.Conv2d(98, 3, 1, 1) #60
+        
+        # final MLP layer to transform combine representation to action space for grid prob
+        self.linear_relu_stack = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 64),    #60
+        )
+        
+        # final MLP layer to transform combine representation to action space for searching
+        self.linear_relu_stack_rl = torch.nn.Sequential(
+            torch.nn.Linear(192, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 64),    #60
+        )
+
+    def forward(self, x, search_info, query_left, loc_query_batch):
+        # Input feature extraction
+        feat_ext = self.agent(x)
+        # feature squezing using 1x1 conv
+        
+        
+        reduced_feat_resnet =  F.relu(self.conv1(feat_ext))
+        
+        reduced_feat = self.maxpool(reduced_feat_resnet)  #apply maxpool stride = 2 #64,7,7
+        
+        
+        
+        # tile previous search history information (auxiliary state ot) #64,7,7
+        search_info_tile = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 7, 7)
+        
+        search_info_tile_search_module = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 8, 8)
+        
+        # tile other queried location in the batch#64,8,8
+        loc_batch_tile = loc_query_batch.view(loc_query_batch.shape[0], loc_query_batch.shape[1], 1, 1).repeat(1, 1, 8, 8)
+        
+        
+        # tile remaining query budget information (b) #1,7,7
+        query_info_tile = query_left.view(query_left.shape[0], 1, 1, 1).repeat(1, 1, 7, 7)
+        #print (query_info_tile.shape)
+        
+        # channel-wise concatenation of input feature, auxiliary state and remainin search budget as explained in the paper
+        inp_search_concat = torch.cat((reduced_feat, search_info_tile), dim=1)  #, query_info_tile  #128,7,7
+        
+        ## apply 1x1 conv on the combined feature representation #3,7,7
+        combined_feat = F.relu(self.pointwise(inp_search_concat))
+        
+        ## apply 1*1 conv on the search info feature representation
+        #search_feat_map = F.relu(self.pointwise_search_info(search_info_tile))
+        search_feat_map = F.relu(self.pointwise_search_info(search_info_tile_search_module))
+        
+        ## apply 1*1 conv on the search info feature representation
+        loc_query_batch_map = F.relu(self.pointwise_loc_query_info(loc_batch_tile))
+        
+        
+        # flattened the final representation
+        out = combined_feat.view(combined_feat.size(0), -1)
+        
+        #print (out.shape)
+        ## apply 2 layer MLP with relu activation to transform the combined feature representation into action space
+        logits = self.linear_relu_stack(out)
+        #print (logits.shape, )
+        grid_prob = logits #F.sigmoid(logits)
+        #grid_prob = torch.mul(logits, mask_info.clone()) 
+        
+        map_grid_prob = grid_prob.view(grid_prob.shape[0], 1, 8, 8)
+        #target = target.to(torch.float32)
+        #map_grid_prob = target.view(target.shape[0], 1, 7, 7)
+        rl_rep = torch.cat((map_grid_prob, search_feat_map, loc_query_batch_map), dim=1)  #, query_info_tile
+        rl_rep_final = rl_rep.view(rl_rep.size(0), -1)
+        #print (grid_prob.shape)
+        
+        
+        logits_rl = self.linear_relu_stack_rl(rl_rep_final)
+        return logits_rl, grid_prob    
+""" 
+
+# MQ-VAS for dota large vehicle 36 
+class Model_search_Arch_Adapt_batch(torch.nn.Module):
+    def __init__(self):
+        super(Model_search_Arch_Adapt_batch, self).__init__()
+        resnet_embedding_sz = 512
+        pointwise_in_channels = 60 
+        ## Input feature extractor
+        res34_model = torchmodels.resnet34(pretrained=True)
+        self.agent = torch.nn.Sequential(*list(res34_model.children())[:-2])
+        for param in self.agent.parameters():
+            param.requires_grad = False
+        # feature squezzing using 1x1 conv
+        self.conv1 = torch.nn.Conv2d(resnet_embedding_sz, 36, 1) #30
+        self.maxpool = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        #################
+        '''
+        # final MLP layer to transform combine representation to action space
+        self.linear_relu_stack_ = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 49),    #60
+        )
+        '''
+        ##################
+        
+        self.pointwise = torch.nn.Conv2d(72, 3, 1, 1) #61
+        
+        self.pointwise_search_info = torch.nn.Conv2d(36, 1, 1, 1)
+        
+        self.pointwise_loc_query_info = torch.nn.Conv2d(36, 1, 1, 1)
+        
+        #self.pointwise_pred = torch.nn.Conv2d(98, 3, 1, 1) #60
+        
+        # final MLP layer to transform combine representation to action space for grid prob
+        self.linear_relu_stack = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 36),    #60
+        )
+        
+        # final MLP layer to transform combine representation to action space for searching
+        self.linear_relu_stack_rl = torch.nn.Sequential(
+            torch.nn.Linear(108, 64),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(64, 36),    #60
+        )
+
+    def forward(self, x, search_info, query_left, loc_query_batch):
+        # Input feature extraction
+        feat_ext = self.agent(x)
+        # feature squezing using 1x1 conv
+        
+        
+        reduced_feat_resnet =  F.relu(self.conv1(feat_ext))
+        
+        reduced_feat = self.maxpool(reduced_feat_resnet)  #apply maxpool stride = 2 #64,7,7
+        
+        
+        
+        # tile previous search history information (auxiliary state ot) #64,7,7
+        search_info_tile = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 7, 7)
+        
+        search_info_tile_search_module = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 6, 6)
+        
+        # tile other queried location in the batch#64,8,8
+        loc_batch_tile = loc_query_batch.view(loc_query_batch.shape[0], loc_query_batch.shape[1], 1, 1).repeat(1, 1, 6, 6)
+        
+        
+        # tile remaining query budget information (b) #1,7,7
+        query_info_tile = query_left.view(query_left.shape[0], 1, 1, 1).repeat(1, 1, 7, 7)
+        #print (query_info_tile.shape)
+        
+        # channel-wise concatenation of input feature, auxiliary state and remainin search budget as explained in the paper
+        inp_search_concat = torch.cat((reduced_feat, search_info_tile), dim=1)  #, query_info_tile  #128,7,7
+        
+        ## apply 1x1 conv on the combined feature representation #3,7,7
+        combined_feat = F.relu(self.pointwise(inp_search_concat))
+        
+        ## apply 1*1 conv on the search info feature representation
+        #search_feat_map = F.relu(self.pointwise_search_info(search_info_tile))
+        search_feat_map = F.relu(self.pointwise_search_info(search_info_tile_search_module))
+        
+        ## apply 1*1 conv on the search info feature representation
+        loc_query_batch_map = F.relu(self.pointwise_loc_query_info(loc_batch_tile))
+        
+        
+        # flattened the final representation
+        out = combined_feat.view(combined_feat.size(0), -1)
+        
+        #print (out.shape)
+        ## apply 2 layer MLP with relu activation to transform the combined feature representation into action space
+        logits = self.linear_relu_stack(out)
+        #print (logits.shape, )
+        grid_prob = logits #F.sigmoid(logits)
+        #grid_prob = torch.mul(logits, mask_info.clone()) 
+        
+        map_grid_prob = grid_prob.view(grid_prob.shape[0], 1, 6, 6)
+        #target = target.to(torch.float32)
+        #map_grid_prob = target.view(target.shape[0], 1, 7, 7)
+        rl_rep = torch.cat((map_grid_prob, search_feat_map, loc_query_batch_map), dim=1)  #, query_info_tile
+        rl_rep_final = rl_rep.view(rl_rep.size(0), -1)
+        #print (grid_prob.shape)
+        
+        
+        logits_rl = self.linear_relu_stack_rl(rl_rep_final)
+        return logits_rl, grid_prob               
+"""    
+
+# MQ-VAS for xview small car 99 
+class Model_search_Arch_Adapt_batch(torch.nn.Module):
+    def __init__(self):
+        super(Model_search_Arch_Adapt_batch, self).__init__()
+        resnet_embedding_sz = 512
+        pointwise_in_channels = 60 
+        ## Input feature extractor
+        res34_model = torchmodels.resnet34(pretrained=True)
+        self.agent = torch.nn.Sequential(*list(res34_model.children())[:-2])
+        for param in self.agent.parameters():
+            param.requires_grad = False
+        # feature squezzing using 1x1 conv
+        self.conv1 = torch.nn.Conv2d(resnet_embedding_sz, 99, 1) #30
+        self.maxpool = torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        #################
+        '''
+        # final MLP layer to transform combine representation to action space
+        self.linear_relu_stack_ = torch.nn.Sequential(
+            torch.nn.Linear(147, 90),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(90, 49),    #60
+        )
+        '''
+        ##################
+        
+        self.pointwise = torch.nn.Conv2d(198, 3, 1, 1) #61
+        
+        self.pointwise_search_info = torch.nn.Conv2d(99, 1, 1, 1)
+        
+        self.pointwise_loc_query_info = torch.nn.Conv2d(99, 1, 1, 1)
+        
+        #self.pointwise_pred = torch.nn.Conv2d(98, 3, 1, 1) #60
+        
+        # final MLP layer to transform combine representation to action space for grid prob
+        self.linear_relu_stack = torch.nn.Sequential(
+            torch.nn.Linear(147, 128),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, 99),    #60
+        )
+        
+        # final MLP layer to transform combine representation to action space for searching
+        self.linear_relu_stack_rl = torch.nn.Sequential(
+            torch.nn.Linear(297, 164),    #60
+            torch.nn.ReLU(),
+            torch.nn.Linear(164, 99),    #60
+        )
+
+    def forward(self, x, search_info, query_left, loc_query_batch):
+        # Input feature extraction
+        feat_ext = self.agent(x)
+        # feature squezing using 1x1 conv
+        
+        
+        reduced_feat_resnet =  F.relu(self.conv1(feat_ext))
+        
+        reduced_feat = self.maxpool(reduced_feat_resnet)  #apply maxpool stride = 2 #64,7,7
+        
+        
+        
+        # tile previous search history information (auxiliary state ot) #64,7,7
+        search_info_tile = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 7, 7)
+        
+        search_info_tile_search_module = search_info.view(search_info.shape[0], search_info.shape[1], 1, 1).repeat(1, 1, 11, 9)
+        
+        # tile other queried location in the batch#64,8,8
+        loc_batch_tile = loc_query_batch.view(loc_query_batch.shape[0], loc_query_batch.shape[1], 1, 1).repeat(1, 1, 11, 9)
+        
+        
+        # tile remaining query budget information (b) #1,7,7
+        query_info_tile = query_left.view(query_left.shape[0], 1, 1, 1).repeat(1, 1, 11, 9)
+        #print (query_info_tile.shape)
+        
+        # channel-wise concatenation of input feature, auxiliary state and remainin search budget as explained in the paper
+        inp_search_concat = torch.cat((reduced_feat, search_info_tile), dim=1)  #, query_info_tile  #128,7,7
+        
+        ## apply 1x1 conv on the combined feature representation #3,7,7
+        combined_feat = F.relu(self.pointwise(inp_search_concat))
+        
+        ## apply 1*1 conv on the search info feature representation
+        #search_feat_map = F.relu(self.pointwise_search_info(search_info_tile))
+        search_feat_map = F.relu(self.pointwise_search_info(search_info_tile_search_module))
+        
+        ## apply 1*1 conv on the search info feature representation
+        loc_query_batch_map = F.relu(self.pointwise_loc_query_info(loc_batch_tile))
+        
+        
+        # flattened the final representation
+        out = combined_feat.view(combined_feat.size(0), -1)
+        
+        #print (out.shape)
+        ## apply 2 layer MLP with relu activation to transform the combined feature representation into action space
+        logits = self.linear_relu_stack(out)
+        #print (logits.shape, )
+        grid_prob = logits #F.sigmoid(logits)
+        #grid_prob = torch.mul(logits, mask_info.clone()) 
+        
+        map_grid_prob = grid_prob.view(grid_prob.shape[0], 1, 11, 9)
+        #target = target.to(torch.float32)
+        #map_grid_prob = target.view(target.shape[0], 1, 7, 7)
+        rl_rep = torch.cat((map_grid_prob, search_feat_map, loc_query_batch_map), dim=1)  #, query_info_tile
+        rl_rep_final = rl_rep.view(rl_rep.size(0), -1)
+        #print (grid_prob.shape)
+        
+        
+        logits_rl = self.linear_relu_stack_rl(rl_rep_final)
+        return logits_rl, grid_prob     
+"""
 
